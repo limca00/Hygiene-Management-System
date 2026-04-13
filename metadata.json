@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Factory Audit Dashboard",
+  "description": "A web application to enter and visualize factory area audit scores. It provides a dashboard with charts and a data table to track performance across different shifts and areas.",
+  "requestFramePermissions": []
+}

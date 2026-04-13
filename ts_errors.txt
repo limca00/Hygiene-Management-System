@@ -1,0 +1,5 @@
+components/Dashboard.tsx(180,8): error TS2741: Property 'selectedSection' is missing in type '{ records: AuditRecord[]; }' but required in type '{ records: AuditRecord[]; selectedSection: string; }'.
+components/DashboardWidgets/AuditHistoryTable.tsx(3,23): error TS2724: '"../../types"' has no exported member named 'AREAS'. Did you mean 'Area'?
+components/DashboardWidgets/AuditHistoryTable.tsx(3,30): error TS2305: Module '"../../types"' has no exported member 'CHECKPOINTS'.
+components/DashboardWidgets/ChartsWidget.tsx(4,23): error TS2724: '"../../types"' has no exported member named 'AREAS'. Did you mean 'Area'?
+components/DashboardWidgets/FPRTracker.tsx(3,15): error TS2724: '"../../types"' has no exported member named 'AREAS'. Did you mean 'Area'?
