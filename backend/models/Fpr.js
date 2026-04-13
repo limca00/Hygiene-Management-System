@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const FprSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
@@ -18,4 +18,4 @@ const FprSchema = new mongoose.Schema({
     date: { type: String }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Fpr', FprSchema);
+export default mongoose.model('Fpr', FprSchema);

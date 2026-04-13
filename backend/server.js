@@ -1,7 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+import 'dotenv/config';
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import apiRoutes from './routes/api.js';
 
 const app = express();
 app.use(cors());
@@ -12,10 +13,13 @@ mongoose.connect(MONGO_URI)
  .then(() => console.log('MongoDB connected'))
  .catch(err => console.error(err));
 
-const apiRoutes = require('./routes/api');
 app.use('/api', apiRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Backend server running on port ${PORT}`);
+    });
+}
+
+export default app;

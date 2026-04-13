@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const CheckpointResultSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -23,4 +23,4 @@ const AuditSchema = new mongoose.Schema({
 // Ensure unique audit per date and shift
 AuditSchema.index({ date: 1, shift: 1 }, { unique: true });
 
-module.exports = mongoose.model('Audit', AuditSchema);
+export default mongoose.model('Audit', AuditSchema);

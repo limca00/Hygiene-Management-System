@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AreaAudit, AuditRecord, FPR, PriorityAlert } from '../types';
+import { AuditRecord, FPR, PriorityAlert } from '../types';
 import { SECTIONS, AREAS, CHECKPOINTS } from '../constants';
 import PriorityAlertPanel from './DashboardWidgets/PriorityAlertPanel';
 import FPRTracker from './DashboardWidgets/FPRTracker';
@@ -236,7 +236,11 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
         <div className="divider" style={{ marginTop: '20px' }} />
 
         {/* ── CHARTS ── */}
-        <ChartsWidget records={records} selectedDate={currentDate} selectedSection={currentSection} />
+        <ChartsWidget 
+          records={records} 
+          selectedDate={currentDate} 
+          selectedSection={currentSection} 
+        />
 
         <div className="divider" style={{ marginTop: '20px' }} />
 

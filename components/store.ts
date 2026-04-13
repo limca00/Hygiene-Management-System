@@ -7,6 +7,8 @@ const AUDIT_STORAGE_KEY = 'auditRecords';
 const ALERTS_STORAGE_KEY = 'priorityAlerts';
 const FPR_STORAGE_KEY = 'fprTracker';
 
+const API_BASE_URL = 'https://hygiene-management-system.vercel.app';
+
 export function useStore() {
   const [records, setRecords] = useState<AuditRecord[]>(() => {
     const saved = localStorage.getItem(AUDIT_STORAGE_KEY);
@@ -24,17 +26,17 @@ export function useStore() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/audits')
+    fetch(`${API_BASE_URL}/api/audits`)
       .then(res => res.json())
       .then(data => setRecords(data))
       .catch(console.error);
     
-    fetch('http://localhost:5000/api/alerts')
+    fetch(`${API_BASE_URL}/api/alerts`)
       .then(res => res.json())
       .then(data => setAlerts(data))
       .catch(console.error);
       
-    fetch('http://localhost:5000/api/fprs')
+    fetch(`${API_BASE_URL}/api/fprs`)
       .then(res => res.json())
       .then(data => setFprs(data))
       .catch(console.error);
@@ -61,7 +63,7 @@ export function useStore() {
     });
 
     try {
-      await fetch('http://localhost:5000/api/audits', {
+      await fetch(`${API_BASE_URL}/api/audits`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record)
@@ -95,7 +97,7 @@ export function useStore() {
       setAlerts(prev => [...prev, ...newAlerts]);
       for (const alert of newAlerts) {
         try {
-          await fetch('http://localhost:5000/api/alerts', {
+          await fetch(`${API_BASE_URL}/api/alerts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(alert)
@@ -108,7 +110,7 @@ export function useStore() {
   const removeAlert = async (alertId: string) => {
     setAlerts(prev => prev.filter(a => a.id !== alertId));
     try {
-      await fetch(`http://localhost:5000/api/alerts/${alertId}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/api/alerts/${alertId}`, { method: 'DELETE' });
     } catch (err) { console.error(err); }
   };
 
@@ -118,7 +120,7 @@ export function useStore() {
     setFprs(prev => [...prev, newFpr]);
 
     try {
-      await fetch('http://localhost:5000/api/fprs', {
+      await fetch(`${API_BASE_URL}/api/fprs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newFpr)
@@ -129,7 +131,7 @@ export function useStore() {
   const updateFpr = async (id: string, updates: Partial<FPR>) => {
     setFprs(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
     try {
-      await fetch(`http://localhost:5000/api/fprs/${id}`, {
+      await fetch(`${API_BASE_URL}/api/fprs/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)

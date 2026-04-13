@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Audit = require('../models/Audit');
-const Fpr = require('../models/Fpr');
-const PriorityAlert = require('../models/PriorityAlert');
+import Audit from '../models/Audit.js';
+import Fpr from '../models/Fpr.js';
+import PriorityAlert from '../models/PriorityAlert.js';
 
 // Save or Update Audit Record
 router.post('/audits', async (req, res) => {
@@ -95,4 +95,4 @@ router.put('/fprs/:id', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

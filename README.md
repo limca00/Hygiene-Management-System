@@ -2,11 +2,16 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Factory Hygiene Management System (HMS)
 
-This contains everything you need to run your app locally.
+Mobile-optimized dashboard for tracking factory hygiene, audits, and FPRs.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1WHFjLWB9FtUSP2sy70p9mTTXqrGdMzMJ
+## Live Deployment
+- **Frontend & Backend:** [https://hygiene-management-system.vercel.app/](https://hygiene-management-system.vercel.app/)
+
+## Tech Stack
+- **Frontend:** React + Vite + Lucide + Chart.js
+- **Backend:** Node.js + Express + MongoDB
 
 ## Run Locally
 

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const PriorityAlertSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
@@ -14,4 +14,4 @@ const PriorityAlertSchema = new mongoose.Schema({
     reason: { type: String }
 }, { timestamps: true });
 
-module.exports = mongoose.model('PriorityAlert', PriorityAlertSchema);
+export default mongoose.model('PriorityAlert', PriorityAlertSchema);
