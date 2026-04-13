@@ -10,8 +10,13 @@ app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/hms_db';
 mongoose.connect(MONGO_URI)
- .then(() => console.log('MongoDB connected'))
- .catch(err => console.error(err));
+ .then(() => console.log('✅ MongoDB connected successfully'))
+ .catch(err => {
+     console.error('❌ MongoDB connection error:', err.message);
+     if (err.message.includes('timeout')) {
+         console.error('Hint: Check if your IP is whitelisted in MongoDB Atlas or if MONGO_URI is correct.');
+     }
+ });
 
 app.use('/api', apiRoutes);
 

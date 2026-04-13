@@ -7,7 +7,7 @@ const AUDIT_STORAGE_KEY = 'auditRecords';
 const ALERTS_STORAGE_KEY = 'priorityAlerts';
 const FPR_STORAGE_KEY = 'fprTracker';
 
-const API_BASE_URL = 'https://hygiene-management-system.vercel.app';
+const API_BASE_URL = '';
 
 export function useStore() {
   const [records, setRecords] = useState<AuditRecord[]>(() => {
