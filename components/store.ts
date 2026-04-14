@@ -27,18 +27,36 @@ export function useStore() {
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/audits`)
-      .then(res => res.json())
-      .then(data => setRecords(data))
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch audits');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) setRecords(data);
+        else console.warn('Expected audits array, received:', data);
+      })
       .catch(console.error);
     
     fetch(`${API_BASE_URL}/api/alerts`)
-      .then(res => res.json())
-      .then(data => setAlerts(data))
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch alerts');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) setAlerts(data);
+        else console.warn('Expected alerts array, received:', data);
+      })
       .catch(console.error);
       
     fetch(`${API_BASE_URL}/api/fprs`)
-      .then(res => res.json())
-      .then(data => setFprs(data))
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch fprs');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) setFprs(data);
+        else console.warn('Expected fprs array, received:', data);
+      })
       .catch(console.error);
   }, []);
 
