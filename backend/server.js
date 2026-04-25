@@ -1,9 +1,15 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import auditRoutes from './routes/auditRoutes.js';
 import fprRoutes from './routes/fprRoutes.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 
 const app = express();
 
