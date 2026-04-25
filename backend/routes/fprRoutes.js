@@ -1,12 +1,22 @@
 import express from 'express';
 const router = express.Router();
 import Fpr from '../models/Fpr.js';
+import PriorityAlert from '../models/PriorityAlert.js';
 
 // Create FPR
 router.post('/fprs', async (req, res) => {
     try {
-        const fpr = new Fpr(req.body);
+        const { alertId, ...fprData } = req.body;
+        const fpr = new Fpr(fprData);
         await fpr.save();
+        
+        if (alertId) {
+            await PriorityAlert.findOneAndUpdate(
+                { id: alertId }, 
+                { isAssigned: true }
+            );
+        }
+        
         res.status(201).json(fpr);
     } catch (err) {
         res.status(500).json({ error: err.message });

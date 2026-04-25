@@ -41,11 +41,21 @@ router.get('/audits', async (req, res) => {
     }
 });
 
-// Create Alert
+// Create or Update Alert
 router.post('/alerts', async (req, res) => {
     try {
-        const alert = new PriorityAlert(req.body);
-        await alert.save();
+        const { recordId, areaId, checkpointName, status, reason } = req.body;
+        let alert = await PriorityAlert.findOne({ recordId, areaId, checkpointName });
+        
+        if (!alert) {
+            alert = new PriorityAlert(req.body);
+            await alert.save();
+        } else {
+            // Update existing alert status/reason
+            alert.status = status;
+            alert.reason = reason;
+            await alert.save();
+        }
         res.status(201).json(alert);
     } catch (err) {
         res.status(500).json({ error: err.message });

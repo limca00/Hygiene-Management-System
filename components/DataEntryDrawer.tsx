@@ -32,6 +32,7 @@ export default function DataEntryDrawer({ onClose, onSave, onAddFpr, showToast }
   const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>(
     CHECKPOINTS.map(c => ({ name: c.name, status: null }))
   );
+  const [isSaving, setIsSaving] = useState(false);
 
   // Inline validation errors
   const [infoErrors, setInfoErrors] = useState({ date: false, auditor: false });
@@ -113,7 +114,7 @@ export default function DataEntryDrawer({ onClose, onSave, onAddFpr, showToast }
   };
 
   /* ── SAVE AREA ── */
-  const handleSaveArea = () => {
+  const handleSaveArea = async () => {
     // Validate all checkpoints answered
     const newCpErrors = checkpoints.map(c => c.status === null);
     setCpErrors(newCpErrors);
@@ -138,19 +139,27 @@ export default function DataEntryDrawer({ onClose, onSave, onAddFpr, showToast }
       checkpoints: [...checkpoints],
       areaScore: liveScore.score,
       areaPercentage: liveScore.percentage,
+      auditor: info.auditor
     };
 
-    onSave({
-      id: `${info.date}_${info.shift}_uid`,
-      date: info.date,
-      shift: info.shift,
-      auditor: info.auditor,
-      areas: [areaAudit],
-    });
-
-    setCompletedAreas(prev => new Set([...prev, selectedAreaId!]));
-    showToast?.(`✅ ${currentArea?.name} audit saved`, 'success');
-    setStep(3);
+    setIsSaving(true);
+    try {
+      await onSave({
+        id: `${info.date}_${info.shift}_uid`,
+        date: info.date,
+        shift: info.shift,
+        auditor: info.auditor,
+        areas: [areaAudit],
+      });
+      setCompletedAreas(prev => new Set([...prev, selectedAreaId!]));
+      showToast?.(`✅ ${currentArea?.name} audit saved`, 'success');
+      setStep(3);
+    } catch (err) {
+      console.error(err);
+      showToast?.('Failed to save audit', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   /* ── Step breadcrumb ── */
@@ -595,10 +604,11 @@ export default function DataEntryDrawer({ onClose, onSave, onAddFpr, showToast }
           {/* Save button */}
           <button
             onClick={handleSaveArea}
+            disabled={isSaving}
             style={{
               width: '100%',
               minHeight: '56px',
-              backgroundColor: '#00bcd4',
+              backgroundColor: isSaving ? '#94a3b8' : '#00bcd4',
               color: '#0d1b2a',
               border: 'none',
               borderRadius: '12px',
@@ -608,11 +618,11 @@ export default function DataEntryDrawer({ onClose, onSave, onAddFpr, showToast }
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              cursor: 'pointer',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
               fontFamily: 'Inter, sans-serif',
             }}
           >
-            <CheckCircle2 size={20} /> Save This Area
+            <CheckCircle2 size={20} /> {isSaving ? 'Saving...' : 'Save This Area'}
           </button>
         </div>
       )}

@@ -29,7 +29,7 @@ export default function AuditHistoryTable({ records, selectedSection }: {
           id: `${record.id}_${areaAudit.areaId}`,
           date: record.date,
           shift: record.shift,
-          auditor: record.auditor,
+          auditor: areaAudit.auditor || record.auditor,
           areaId: areaAudit.areaId,
           areaName: areaDef?.name || 'Unknown',
           section: areaDef?.section || 'Unknown',

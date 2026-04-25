@@ -8,6 +8,7 @@ const CheckpointResultSchema = new mongoose.Schema({
 
 const AreaAuditSchema = new mongoose.Schema({
     areaId: { type: String, required: true },
+    auditor: { type: String },
     checkpoints: [CheckpointResultSchema],
     areaScore: { type: Number, required: true },
     areaPercentage: { type: Number, required: true }

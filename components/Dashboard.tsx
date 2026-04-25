@@ -82,7 +82,9 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
   // Chronic Issues
   const chronicIssues = useMemo(() => {
     const issues = new Set<string>();
-    const sortedRecords = [...records].sort((a, b) => `${a.date}${a.shift}`.localeCompare(`${b.date}${b.shift}`));
+    const sortedRecords = [...records]
+      .sort((a, b) => `${a.date}${a.shift}`.localeCompare(`${b.date}${b.shift}`))
+      .slice(-15); // Only look at the last ~5 days to prevent UI freezing
     AREAS.forEach(area => {
       CHECKPOINTS.forEach(cp => {
         let consecutiveFails = 0;

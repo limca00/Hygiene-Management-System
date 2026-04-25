@@ -82,8 +82,8 @@ export default function App() {
 
   const handleAddFpr = useCallback(async (fprData: any, alertId?: string) => {
     try {
-      await addFpr(fprData);
-      if (alertId) await removeAlert(alertId);
+      await addFpr(fprData, alertId);
+      if (alertId) removeAlert(alertId);
       showToast(`📋 FPR assigned to ${fprData.assignPerson}`, 'info');
     } catch (err) {
       showToast('❌ Failed to assign FPR', 'error');

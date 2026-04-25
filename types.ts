@@ -25,6 +25,7 @@ export interface Area {
 
 export interface AreaAudit {
   areaId: string;
+  auditor?: string;
   checkpoints: CheckpointResult[];
   areaScore: number;
   areaPercentage: number;

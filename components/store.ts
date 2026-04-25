@@ -119,7 +119,15 @@ export function useStore() {
           });
           if (alertResponse.ok) {
             const savedAlert = await alertResponse.json();
-            setAlerts(prev => [...prev, savedAlert]);
+            setAlerts(prev => {
+              const idx = prev.findIndex(a => a.id === savedAlert.id);
+              if (idx >= 0) {
+                const newAlerts = [...prev];
+                newAlerts[idx] = savedAlert;
+                return newAlerts;
+              }
+              return [...prev, savedAlert];
+            });
           } else {
             console.error('Failed to save alert', alert);
           }
@@ -132,26 +140,14 @@ export function useStore() {
     }
   };
 
-  const removeAlert = async (alertId: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isAssigned: true })
-      });
-      if (!response.ok) {
-        throw new Error(`API failed: ${response.status}`);
-      }
-      setAlerts(prev => prev.filter(a => a.id !== alertId));
-    } catch (err) {
-      console.error('Fetch failed:', err);
-    }
+  const removeAlert = (alertId: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
   };
 
-  const addFpr = async (fpr: Omit<FPR, 'id' | 'fprId'>) => {
+  const addFpr = async (fpr: Omit<FPR, 'id' | 'fprId'>, alertId?: string) => {
     try {
       const newFprId = fprs.length > 0 ? Math.max(...fprs.map(f => f.fprId)) + 1 : 1;
-      const newFpr = { ...fpr, id: `FPR-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, fprId: newFprId };
+      const newFpr = { ...fpr, id: `FPR-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, fprId: newFprId, alertId };
       
       const response = await fetch(`${API_BASE_URL}/fprs`, {
         method: 'POST',
