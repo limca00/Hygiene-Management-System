@@ -7,11 +7,24 @@ import PriorityAlert from '../models/PriorityAlert.js';
 router.post('/audits', async (req, res) => {
     try {
         const { id, date, shift, auditor, areas } = req.body;
-        const audit = await Audit.findOneAndUpdate(
-            { date, shift },
-            { date, shift, auditor, areas },
-            { new: true, upsert: true }
-        );
+        let audit = await Audit.findOne({ date, shift });
+        if (audit) {
+            // Merge areas
+            areas.forEach(newArea => {
+                const existingIdx = audit.areas.findIndex(a => a.areaId === newArea.areaId);
+                if (existingIdx >= 0) {
+                    audit.areas[existingIdx] = newArea;
+                } else {
+                    audit.areas.push(newArea);
+                }
+            });
+            audit.auditor = auditor;
+            await audit.save();
+        } else {
+            // Create new record
+            audit = new Audit({ id, date, shift, auditor, areas });
+            await audit.save();
+        }
         res.status(200).json(audit);
     } catch (err) {
         res.status(500).json({ error: err.message });
