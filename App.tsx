@@ -39,7 +39,7 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
    MAIN APP
    ============================================================ */
 export default function App() {
-  const { records, fprs, alerts, saveAudit, addFpr, updateFpr, removeAlert } = useStore();
+  const { records, fprs, alerts, saveAudit, addFpr, updateFpr, removeAlert, isLoading, apiConnected } = useStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -72,20 +72,32 @@ export default function App() {
 
   /* ---- Wrapped handlers with toast feedback ---- */
   const handleSaveAudit = useCallback(async (record: any) => {
-    await saveAudit(record);
-    showToast('✅ Area audit saved successfully', 'success');
+    try {
+      await saveAudit(record);
+      showToast('✅ Area audit saved successfully', 'success');
+    } catch (err) {
+      showToast('❌ Failed to save. Please check your connection.', 'error');
+    }
   }, [saveAudit, showToast]);
 
-  const handleAddFpr = useCallback((fprData: any, alertId?: string) => {
-    addFpr(fprData);
-    if (alertId) removeAlert(alertId);
-    showToast(`📋 FPR assigned to ${fprData.assignPerson}`, 'info');
+  const handleAddFpr = useCallback(async (fprData: any, alertId?: string) => {
+    try {
+      await addFpr(fprData);
+      if (alertId) await removeAlert(alertId);
+      showToast(`📋 FPR assigned to ${fprData.assignPerson}`, 'info');
+    } catch (err) {
+      showToast('❌ Failed to assign FPR', 'error');
+    }
   }, [addFpr, removeAlert, showToast]);
 
-  const handleUpdateFpr = useCallback((id: string, updates: any) => {
-    updateFpr(id, updates);
-    if (updates.status === 'CLOSED') {
-      showToast('✅ FPR closed successfully', 'success');
+  const handleUpdateFpr = useCallback(async (id: string, updates: any) => {
+    try {
+      await updateFpr(id, updates);
+      if (updates.status === 'CLOSED') {
+        showToast('✅ FPR closed successfully', 'success');
+      }
+    } catch (err) {
+      showToast('❌ Failed to update FPR', 'error');
     }
   }, [updateFpr, showToast]);
 
@@ -100,15 +112,24 @@ export default function App() {
         {/* Toast notifications */}
         <ToastContainer toasts={toasts} />
 
-        {/* Dashboard */}
-        <Dashboard
-          records={records}
-          fprs={fprs}
-          alerts={alerts}
-          onUpdateFpr={handleUpdateFpr}
-          onAddFpr={handleAddFpr}
-          onRemoveAlert={handleRemoveAlert}
-        />
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+            <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid #00bcd4', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }} />
+            <p style={{ marginTop: '16px', color: '#94a3b8', fontSize: '14px' }}>Loading data...</p>
+            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          </div>
+        ) : (
+          <>
+            {/* Dashboard */}
+            <Dashboard
+              records={records}
+              fprs={fprs}
+              alerts={alerts}
+              onUpdateFpr={handleUpdateFpr}
+              onAddFpr={handleAddFpr}
+              onRemoveAlert={handleRemoveAlert}
+              apiConnected={apiConnected}
+            />
 
         {/* Floating FAB — Data Entry */}
         <button
@@ -171,6 +192,9 @@ export default function App() {
             )}
           </div>
         </div>
+
+          </>
+        )}
 
       </div>
     </ToastContext.Provider>

@@ -1,7 +1,6 @@
 import express from 'express';
 const router = express.Router();
 import Audit from '../models/Audit.js';
-import Fpr from '../models/Fpr.js';
 import PriorityAlert from '../models/PriorityAlert.js';
 
 // Save or Update Audit Record
@@ -40,17 +39,17 @@ router.post('/alerts', async (req, res) => {
     }
 });
 
-// Get Alerts
+// Get Unassigned Alerts
 router.get('/alerts', async (req, res) => {
     try {
-        const alerts = await PriorityAlert.find();
+        const alerts = await PriorityAlert.find({ isAssigned: false });
         res.status(200).json(alerts);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// Delete Alert
+// Delete Alert (Legacy/optional)
 router.delete('/alerts/:id', async (req, res) => {
     try {
         await PriorityAlert.findOneAndDelete({ id: req.params.id });
@@ -60,36 +59,15 @@ router.delete('/alerts/:id', async (req, res) => {
     }
 });
 
-// Create FPR
-router.post('/fprs', async (req, res) => {
+// Mark Alert as Assigned
+router.patch('/alerts/:id', async (req, res) => {
     try {
-        const fpr = new Fpr(req.body);
-        await fpr.save();
-        res.status(201).json(fpr);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get FPRs
-router.get('/fprs', async (req, res) => {
-    try {
-        const fprs = await Fpr.find();
-        res.status(200).json(fprs);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Update FPR
-router.put('/fprs/:id', async (req, res) => {
-    try {
-        const fpr = await Fpr.findOneAndUpdate(
+        const alert = await PriorityAlert.findOneAndUpdate(
             { id: req.params.id },
-            req.body,
+            { isAssigned: true },
             { new: true }
         );
-        res.status(200).json(fpr);
+        res.status(200).json(alert);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

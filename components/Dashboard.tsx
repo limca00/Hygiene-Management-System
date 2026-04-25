@@ -14,9 +14,10 @@ interface DashboardProps {
   onUpdateFpr: (id: string, updates: Partial<FPR>) => void;
   onAddFpr: (fpr: Omit<FPR, 'id' | 'fprId'>) => void;
   onRemoveAlert: (id: string) => void;
+  apiConnected: boolean;
 }
 
-export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr, onRemoveAlert }: DashboardProps) {
+export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr, onRemoveAlert, apiConnected }: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentShift, setCurrentShift] = useState<'P' | 'Q' | 'R'>('P');
   const [currentSection, setCurrentSection] = useState<any>('BISCUIT');
@@ -111,10 +112,31 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
       <div className="sticky-header">
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ color: '#00bcd4', fontSize: '18px', fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
-              Hygiene Audit System
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '12px', margin: 0, marginTop: '1px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1 style={{ color: '#00bcd4', fontSize: '18px', fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
+                Hygiene Audit System
+              </h1>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                backgroundColor: apiConnected ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                border: `1px solid ${apiConnected ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              }}>
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: apiConnected ? '#22c55e' : '#ef4444'
+                }} />
+                <span style={{ fontSize: '10px', fontWeight: 600, color: apiConnected ? '#22c55e' : '#ef4444' }}>
+                  {apiConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              </div>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '12px', margin: 0, marginTop: '2px' }}>
               {today}
             </p>
           </div>
