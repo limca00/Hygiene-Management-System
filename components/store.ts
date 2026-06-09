@@ -177,7 +177,10 @@ export function useStore() {
         response = await fetch(`${API_BASE_URL}/fprs/${id}/close`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actionTaken: updates.actionTaken || 'Closed via dashboard' })
+          body: JSON.stringify({ 
+            actionTaken: updates.actionTaken || 'Closed via dashboard',
+            closeDate: updates.closeDate || new Date().toISOString()
+          })
         });
       } else {
         response = await fetch(`${API_BASE_URL}/fprs/${id}`, {

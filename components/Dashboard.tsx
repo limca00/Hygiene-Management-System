@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AuditRecord, FPR, PriorityAlert } from '../types';
 import { SECTIONS, AREAS, CHECKPOINTS } from '../constants';
+import { BarChart3, AlertCircle, History } from 'lucide-react';
 import PriorityAlertPanel from './DashboardWidgets/PriorityAlertPanel';
 import FPRTracker from './DashboardWidgets/FPRTracker';
 import SectionHealthCards from './DashboardWidgets/SectionHealthCards';
@@ -12,7 +13,7 @@ interface DashboardProps {
   fprs: FPR[];
   alerts: PriorityAlert[];
   onUpdateFpr: (id: string, updates: Partial<FPR>) => void;
-  onAddFpr: (fpr: Omit<FPR, 'id' | 'fprId'>) => void;
+  onAddFpr: (fpr: Omit<FPR, 'id' | 'fprId'>, alertId?: string) => void;
   onRemoveAlert: (id: string) => void;
   apiConnected: boolean;
 }
@@ -21,6 +22,8 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentShift, setCurrentShift] = useState<'P' | 'Q' | 'R'>('P');
   const [currentSection, setCurrentSection] = useState<any>('BISCUIT');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'tickets' | 'history'>('analytics');
+
 
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -164,112 +167,158 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
             Reset DB
           </button>
         </div>
+
+        {/* Navigation Tabs */}
+        <div style={{
+          display: 'flex',
+          borderTop: '1px solid #1a2a3a',
+          padding: '4px 16px 8px',
+          gap: '8px',
+          backgroundColor: 'rgba(13, 27, 42, 0.95)',
+        }}>
+          {[
+            { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={16} /> },
+            { id: 'tickets', label: 'Tickets', icon: <AlertCircle size={16} /> },
+            { id: 'history', label: 'History', icon: <History size={16} /> }
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '8px 4px',
+                minHeight: '38px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === t.id ? 'rgba(0, 188, 212, 0.15)' : 'transparent',
+                color: activeTab === t.id ? '#00bcd4' : '#94a3b8',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+              }}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── MAIN CONTENT ── */}
       <div style={{ padding: '16px', maxWidth: '900px', margin: '0 auto' }}>
 
-        {/* ── FILTER BAR ── */}
-        <div style={{
-          backgroundColor: '#1a2a3a',
-          border: '1px solid #1e3a4a',
-          borderRadius: '14px',
-          padding: '16px',
-          marginBottom: '20px',
-        }}>
-          <h2 style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
-            Dashboard Filters
-          </h2>
+        {/* ════════ ANALYTICS TAB ════════ */}
+        {activeTab === 'analytics' && (
+          <>
+            {/* ── FILTER BAR ── */}
+            <div style={{
+              backgroundColor: '#1a2a3a',
+              border: '1px solid #1e3a4a',
+              borderRadius: '14px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}>
+              <h2 style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
+                Dashboard Filters
+              </h2>
 
-          {/* Date — full width */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Date
-            </label>
-            <input
-              type="date"
-              value={currentDate}
-              onChange={e => setCurrentDate(e.target.value)}
-              className="mobile-input"
+              {/* Date — full width */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={currentDate}
+                  onChange={e => setCurrentDate(e.target.value)}
+                  className="mobile-input"
+                />
+              </div>
+
+              {/* Shift — 3 large toggle buttons */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Shift
+                </label>
+                <div className="shift-toggle-group">
+                  {(['P', 'Q', 'R'] as const).map(s => (
+                    <button
+                      key={s}
+                      className={`shift-toggle-btn ${currentShift === s ? 'active' : ''}`}
+                      onClick={() => setCurrentShift(s)}
+                    >
+                      {s} Shift
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section — horizontally scrollable chips */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Section
+                </label>
+                <div className="section-chips-row">
+                  {SECTIONS.map(s => (
+                    <button
+                      key={s}
+                      className={`section-chip ${currentSection === s ? 'active' : ''}`}
+                      onClick={() => setCurrentSection(s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="divider" />
+
+            {/* ── SECTION HEALTH CARDS ── */}
+            <SectionHealthCards
+              health={sectionHealth}
+              activeSection={currentSection}
+              selectedDate={currentDate}
+              onSectionClick={(s: string) => setCurrentSection(s)}
             />
+
+            <div className="divider" style={{ marginTop: '20px' }} />
+
+            {/* ── CHARTS ── */}
+            <ChartsWidget 
+              records={records} 
+              selectedDate={currentDate} 
+              selectedSection={currentSection} 
+            />
+          </>
+        )}
+
+        {/* ════════ TICKETS TAB ════════ */}
+        {activeTab === 'tickets' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <PriorityAlertPanel
+              items={priorityItems}
+              chronicIssues={chronicIssues}
+              onAssignFpr={(fprData: any, alertId: string) => {
+                onAddFpr(fprData, alertId);
+                onRemoveAlert(alertId);
+              }}
+            />
+            <FPRTracker fprs={fprs} onUpdate={onUpdateFpr} selectedSection={currentSection} />
           </div>
+        )}
 
-          {/* Shift — 3 large toggle buttons */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Shift
-            </label>
-            <div className="shift-toggle-group">
-              {(['P', 'Q', 'R'] as const).map(s => (
-                <button
-                  key={s}
-                  className={`shift-toggle-btn ${currentShift === s ? 'active' : ''}`}
-                  onClick={() => setCurrentShift(s)}
-                >
-                  {s} Shift
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section — horizontally scrollable chips */}
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Section
-            </label>
-            <div className="section-chips-row">
-              {SECTIONS.map(s => (
-                <button
-                  key={s}
-                  className={`section-chip ${currentSection === s ? 'active' : ''}`}
-                  onClick={() => setCurrentSection(s)}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="divider" />
-
-        {/* ── SECTION HEALTH CARDS ── */}
-        <SectionHealthCards
-          health={sectionHealth}
-          activeSection={currentSection}
-          selectedDate={currentDate}
-          onSectionClick={(s: string) => setCurrentSection(s)}
-        />
-
-        <div className="divider" style={{ marginTop: '20px' }} />
-
-        {/* ── PRIORITY ALERTS + FPR TRACKER ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <PriorityAlertPanel
-            items={priorityItems}
-            chronicIssues={chronicIssues}
-            onAssignFpr={(fprData: any, alertId: string) => {
-              onAddFpr(fprData);
-              onRemoveAlert(alertId);
-            }}
-          />
-          <FPRTracker fprs={fprs} onUpdate={onUpdateFpr} selectedSection={currentSection} />
-        </div>
-
-        <div className="divider" style={{ marginTop: '20px' }} />
-
-        {/* ── CHARTS ── */}
-        <ChartsWidget 
-          records={records} 
-          selectedDate={currentDate} 
-          selectedSection={currentSection} 
-        />
-
-        <div className="divider" style={{ marginTop: '20px' }} />
-
-        {/* ── AUDIT HISTORY ── */}
-        <AuditHistoryTable records={records} selectedSection={currentSection} />
+        {/* ════════ HISTORY TAB ════════ */}
+        {activeTab === 'history' && (
+          <AuditHistoryTable records={records} selectedSection={currentSection} />
+        )}
 
       </div>
     </div>

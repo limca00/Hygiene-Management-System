@@ -72,6 +72,7 @@ router.patch('/fprs/:id/close', async (req, res) => {
             { 
                 status: 'CLOSED',
                 actionTaken: req.body.actionTaken || 'Closed via dashboard',
+                closeDate: req.body.closeDate || new Date().toISOString()
             },
             { new: true }
         );

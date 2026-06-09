@@ -16,6 +16,9 @@ const FprSchema = new mongoose.Schema({
     shift: { type: String },
     auditor: { type: String },
     date: { type: String }
-}, { timestamps: true });
+}, { timestamps: true, id: false });
+
+FprSchema.index({ status: 1, createdAt: -1 });
 
 export default mongoose.model('Fpr', FprSchema);
+

@@ -13,6 +13,9 @@ const PriorityAlertSchema = new mongoose.Schema({
     status: { type: String, enum: ['PARTIAL', 'FAIL'], required: true },
     reason: { type: String },
     isAssigned: { type: Boolean, default: false }
-}, { timestamps: true });
+}, { timestamps: true, id: false });
+
+PriorityAlertSchema.index({ isAssigned: 1 });
 
 export default mongoose.model('PriorityAlert', PriorityAlertSchema);
+
