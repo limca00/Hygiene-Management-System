@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { AuditRecord, FPR, PriorityAlert } from '../types';
 import { SECTIONS, AREAS, CHECKPOINTS } from '../constants';
-import { BarChart3, AlertCircle, History } from 'lucide-react';
+import { BarChart3, AlertCircle, History, Sparkles } from 'lucide-react';
 import PriorityAlertPanel from './DashboardWidgets/PriorityAlertPanel';
 import FPRTracker from './DashboardWidgets/FPRTracker';
 import SectionHealthCards from './DashboardWidgets/SectionHealthCards';
 import ChartsWidget from './DashboardWidgets/ChartsWidget';
 import AuditHistoryTable from './DashboardWidgets/AuditHistoryTable';
+import CobwebTrackerWidget from './DashboardWidgets/CobwebTrackerWidget';
 
 interface DashboardProps {
   records: AuditRecord[];
@@ -16,13 +17,28 @@ interface DashboardProps {
   onAddFpr: (fpr: Omit<FPR, 'id' | 'fprId'>, alertId?: string) => void;
   onRemoveAlert: (id: string) => void;
   apiConnected: boolean;
+  cobwebSchedules: any[];
+  cobwebAudits: any[];
+  onSaveCobwebAudit: (audit: any) => Promise<any>;
 }
 
-export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr, onRemoveAlert, apiConnected }: DashboardProps) {
+export default function Dashboard({ 
+  records, 
+  fprs, 
+  alerts, 
+  onUpdateFpr, 
+  onAddFpr, 
+  onRemoveAlert, 
+  apiConnected,
+  cobwebSchedules,
+  cobwebAudits,
+  onSaveCobwebAudit
+}: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentShift, setCurrentShift] = useState<'P' | 'Q' | 'R'>('P');
   const [currentSection, setCurrentSection] = useState<any>('BISCUIT');
-  const [activeTab, setActiveTab] = useState<'analytics' | 'tickets' | 'history'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'tickets' | 'history' | 'cobweb'>('analytics');
+
 
 
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
@@ -179,7 +195,8 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
           {[
             { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={16} /> },
             { id: 'tickets', label: 'Tickets', icon: <AlertCircle size={16} /> },
-            { id: 'history', label: 'History', icon: <History size={16} /> }
+            { id: 'history', label: 'History', icon: <History size={16} /> },
+            { id: 'cobweb', label: 'Cobweb', icon: <Sparkles size={16} /> }
           ].map(t => (
             <button
               key={t.id}
@@ -211,116 +228,188 @@ export default function Dashboard({ records, fprs, alerts, onUpdateFpr, onAddFpr
         </div>
       </div>
 
-      {/* ── MAIN CONTENT ── */}
-      <div style={{ padding: '16px', maxWidth: '900px', margin: '0 auto' }}>
+      {/* Helper values for Cobweb Summary Card */}
+      {(() => {
+        const todayScheduleDate = (() => {
+          if (!currentDate) return '';
+          const [yyyy, mm, dd] = currentDate.split('-');
+          return `${dd}-${mm}-${yyyy}`;
+        })();
 
-        {/* ════════ ANALYTICS TAB ════════ */}
-        {activeTab === 'analytics' && (
-          <>
-            {/* ── FILTER BAR ── */}
-            <div style={{
-              backgroundColor: '#1a2a3a',
-              border: '1px solid #1e3a4a',
-              borderRadius: '14px',
-              padding: '16px',
-              marginBottom: '20px',
-            }}>
-              <h2 style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
-                Dashboard Filters
-              </h2>
+        const todaySchedule = cobwebSchedules.find(s => s.date === todayScheduleDate);
+        const todayAreas = todaySchedule ? todaySchedule.areas : [];
+        const todayAudits = cobwebAudits.filter(a => a.date === todayScheduleDate);
+        const pendingCount = todayAreas.filter(area => !todayAudits.map(a => a.areaName).includes(area)).length;
 
-              {/* Date — full width */}
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={currentDate}
-                  onChange={e => setCurrentDate(e.target.value)}
-                  className="mobile-input"
+        return (
+          /* ── MAIN CONTENT ── */
+          <div style={{ padding: '16px', maxWidth: '900px', margin: '0 auto' }}>
+
+            {/* ════════ ANALYTICS TAB ════════ */}
+            {activeTab === 'analytics' && (
+              <>
+                {/* ── FILTER BAR ── */}
+                <div style={{
+                  backgroundColor: '#1a2a3a',
+                  border: '1px solid #1e3a4a',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                }}>
+                  <h2 style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
+                    Dashboard Filters
+                  </h2>
+
+                  {/* Date — full width */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={currentDate}
+                      onChange={e => setCurrentDate(e.target.value)}
+                      className="mobile-input"
+                    />
+                  </div>
+
+                  {/* Shift — 3 large toggle buttons */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Shift
+                    </label>
+                    <div className="shift-toggle-group">
+                      {(['P', 'Q', 'R'] as const).map(s => (
+                        <button
+                          key={s}
+                          className={`shift-toggle-btn ${currentShift === s ? 'active' : ''}`}
+                          onClick={() => setCurrentShift(s)}
+                        >
+                          {s} Shift
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section — horizontally scrollable chips */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Section
+                    </label>
+                    <div className="section-chips-row">
+                      {SECTIONS.map(s => (
+                        <button
+                          key={s}
+                          className={`section-chip ${currentSection === s ? 'active' : ''}`}
+                          onClick={() => setCurrentSection(s)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🕸 Cobweb Cleaning Tracker Summary Card */}
+                <div style={{
+                  backgroundColor: '#1a2a3a',
+                  border: '1px solid #1e3a4a',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles color="#00bcd4" size={18} />
+                    <h3 style={{ color: '#e2e8f0', fontSize: '15px', fontWeight: 700, margin: 0 }}>
+                      🕸 Cobweb Cleaning Tracker
+                    </h3>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 2px' }}>
+                        Today's Schedule: <strong style={{ color: '#00bcd4' }}>{todayAreas.length > 0 ? todayAreas.join(', ') : 'None'}</strong>
+                      </p>
+                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                        Status: <strong style={{ color: pendingCount > 0 ? '#f59e0b' : '#22c55e' }}>{pendingCount > 0 ? `${pendingCount} Pending Verification` : 'All Verified'}</strong>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('cobweb')}
+                      style={{
+                        backgroundColor: 'rgba(0,188,212,0.12)',
+                        border: '1px solid #00bcd4',
+                        color: '#00bcd4',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                    >
+                      Open Tracker
+                    </button>
+                  </div>
+                </div>
+
+                <div className="divider" />
+
+                {/* ── SECTION HEALTH CARDS ── */}
+                <SectionHealthCards
+                  health={sectionHealth}
+                  activeSection={currentSection}
+                  selectedDate={currentDate}
+                  onSectionClick={(s: string) => setCurrentSection(s)}
                 />
+
+                <div className="divider" style={{ marginTop: '20px' }} />
+
+                {/* ── CHARTS ── */}
+                <ChartsWidget 
+                  records={records} 
+                  selectedDate={currentDate} 
+                  selectedSection={currentSection} 
+                />
+              </>
+            )}
+
+            {/* ════════ TICKETS TAB ════════ */}
+            {activeTab === 'tickets' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <PriorityAlertPanel
+                  items={priorityItems}
+                  chronicIssues={chronicIssues}
+                  onAssignFpr={(fprData: any, alertId: string) => {
+                    onAddFpr(fprData, alertId);
+                    onRemoveAlert(alertId);
+                  }}
+                />
+                <FPRTracker fprs={fprs} onUpdate={onUpdateFpr} selectedSection={currentSection} />
               </div>
+            )}
 
-              {/* Shift — 3 large toggle buttons */}
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Shift
-                </label>
-                <div className="shift-toggle-group">
-                  {(['P', 'Q', 'R'] as const).map(s => (
-                    <button
-                      key={s}
-                      className={`shift-toggle-btn ${currentShift === s ? 'active' : ''}`}
-                      onClick={() => setCurrentShift(s)}
-                    >
-                      {s} Shift
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* ════════ HISTORY TAB ════════ */}
+            {activeTab === 'history' && (
+              <AuditHistoryTable records={records} selectedSection={currentSection} />
+            )}
 
-              {/* Section — horizontally scrollable chips */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Section
-                </label>
-                <div className="section-chips-row">
-                  {SECTIONS.map(s => (
-                    <button
-                      key={s}
-                      className={`section-chip ${currentSection === s ? 'active' : ''}`}
-                      onClick={() => setCurrentSection(s)}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* ════════ COBWEB TAB ════════ */}
+            {activeTab === 'cobweb' && (
+              <CobwebTrackerWidget
+                cobwebSchedules={cobwebSchedules}
+                cobwebAudits={cobwebAudits}
+                onSaveCobwebAudit={onSaveCobwebAudit}
+                alerts={alerts}
+                currentDate={currentDate}
+              />
+            )}
 
-            <div className="divider" />
-
-            {/* ── SECTION HEALTH CARDS ── */}
-            <SectionHealthCards
-              health={sectionHealth}
-              activeSection={currentSection}
-              selectedDate={currentDate}
-              onSectionClick={(s: string) => setCurrentSection(s)}
-            />
-
-            <div className="divider" style={{ marginTop: '20px' }} />
-
-            {/* ── CHARTS ── */}
-            <ChartsWidget 
-              records={records} 
-              selectedDate={currentDate} 
-              selectedSection={currentSection} 
-            />
-          </>
-        )}
-
-        {/* ════════ TICKETS TAB ════════ */}
-        {activeTab === 'tickets' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <PriorityAlertPanel
-              items={priorityItems}
-              chronicIssues={chronicIssues}
-              onAssignFpr={(fprData: any, alertId: string) => {
-                onAddFpr(fprData, alertId);
-                onRemoveAlert(alertId);
-              }}
-            />
-            <FPRTracker fprs={fprs} onUpdate={onUpdateFpr} selectedSection={currentSection} />
           </div>
-        )}
-
-        {/* ════════ HISTORY TAB ════════ */}
-        {activeTab === 'history' && (
-          <AuditHistoryTable records={records} selectedSection={currentSection} />
-        )}
-
-      </div>
+        );
+      })()}
     </div>
   );
 }

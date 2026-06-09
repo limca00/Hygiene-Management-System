@@ -77,3 +77,22 @@ export interface ChronicIssue {
   areaId: string;
   checkpointName: CheckpointName;
 }
+
+export interface CobwebSchedule {
+  date: string;
+  areas: string[];
+}
+
+export interface CobwebAudit {
+  id: string;
+  date: string;
+  areaName: string;
+  auditor: string;
+  inspectionTime: string;
+  score: number;
+  status: string;
+  remarks: string;
+  beforePhoto?: string;
+  afterPhoto?: string;
+}
+

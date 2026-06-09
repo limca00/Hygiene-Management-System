@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import auditRoutes from './routes/auditRoutes.js';
 import fprRoutes from './routes/fprRoutes.js';
+import cobwebRoutes from './routes/cobwebRoutes.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -56,6 +57,7 @@ app.use(async (req, res, next) => {
 
 app.use('/api', auditRoutes);
 app.use('/api', fprRoutes);
+app.use('/api', cobwebRoutes);
 
 app.get('/', (req, res) => res.send('API is running'));
 

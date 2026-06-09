@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AuditRecord, FPR, PriorityAlert } from '../types';
+import { AuditRecord, FPR, PriorityAlert, CobwebSchedule, CobwebAudit } from '../types';
 import { AREAS } from '../constants';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
@@ -8,6 +8,8 @@ export function useStore() {
   const [records, setRecords] = useState<AuditRecord[]>([]);
   const [alerts, setAlerts] = useState<PriorityAlert[]>([]);
   const [fprs, setFprs] = useState<FPR[]>([]);
+  const [cobwebSchedules, setCobwebSchedules] = useState<CobwebSchedule[]>([]);
+  const [cobwebAudits, setCobwebAudits] = useState<CobwebAudit[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [apiConnected, setApiConnected] = useState(false);
@@ -16,22 +18,26 @@ export function useStore() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [auditsRes, alertsRes, openFprsRes, closedFprsRes] = await Promise.all([
+        const [auditsRes, alertsRes, openFprsRes, closedFprsRes, cobwebSchedulesRes, cobwebAuditsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/audits`),
           fetch(`${API_BASE_URL}/alerts`),
           fetch(`${API_BASE_URL}/fprs?status=OPEN`),
           fetch(`${API_BASE_URL}/fprs?status=CLOSED&limit=10`),
+          fetch(`${API_BASE_URL}/cobweb-schedule`),
+          fetch(`${API_BASE_URL}/cobweb-audit`)
         ]);
 
-        if (!auditsRes.ok || !alertsRes.ok || !openFprsRes.ok || !closedFprsRes.ok) {
+        if (!auditsRes.ok || !alertsRes.ok || !openFprsRes.ok || !closedFprsRes.ok || !cobwebSchedulesRes.ok || !cobwebAuditsRes.ok) {
           throw new Error('One or more API requests failed');
         }
 
-        const [auditsData, alertsData, openFprsData, closedFprsData] = await Promise.all([
+        const [auditsData, alertsData, openFprsData, closedFprsData, cobwebSchedulesData, cobwebAuditsData] = await Promise.all([
           auditsRes.json(),
           alertsRes.json(),
           openFprsRes.json(),
-          closedFprsRes.json()
+          closedFprsRes.json(),
+          cobwebSchedulesRes.json(),
+          cobwebAuditsRes.json()
         ]);
 
         setRecords(Array.isArray(auditsData) ? auditsData : []);
@@ -40,6 +46,9 @@ export function useStore() {
         const openFprs = Array.isArray(openFprsData) ? openFprsData : [];
         const closedFprs = Array.isArray(closedFprsData) ? closedFprsData : [];
         setFprs([...openFprs, ...closedFprs]);
+
+        setCobwebSchedules(Array.isArray(cobwebSchedulesData) ? cobwebSchedulesData : []);
+        setCobwebAudits(Array.isArray(cobwebAuditsData) ? cobwebAuditsData : []);
         
         setApiConnected(true);
       } catch (err) {
@@ -205,5 +214,52 @@ export function useStore() {
     }
   };
 
-  return { records, fprs, alerts, saveAudit, addFpr, updateFpr, removeAlert, isLoading, apiConnected };
+  const saveCobwebAudit = async (audit: Omit<CobwebAudit, 'id'>) => {
+    try {
+      const newAudit = { ...audit, id: `COBWEB-${Date.now()}-${Math.random().toString(36).substring(2, 9)}` };
+      const response = await fetch(`${API_BASE_URL}/cobweb-audit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAudit)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`API failed: ${response.status}`);
+      }
+      
+      const savedAudit = await response.json();
+      setCobwebAudits(prev => [savedAudit, ...prev]);
+
+      // If score is < 60, we also fetch alerts again to synchronize the UI
+      if (audit.score < 60) {
+        const alertsRes = await fetch(`${API_BASE_URL}/alerts`);
+        if (alertsRes.ok) {
+          const alertsData = await alertsRes.json();
+          setAlerts(Array.isArray(alertsData) ? alertsData : []);
+        }
+      }
+
+      return savedAudit;
+    } catch (err) {
+      console.error('Save cobweb audit failed:', err);
+      throw err;
+    }
+  };
+
+  return { 
+    records, 
+    fprs, 
+    alerts, 
+    saveAudit, 
+    addFpr, 
+    updateFpr, 
+    removeAlert, 
+    isLoading, 
+    apiConnected, 
+    cobwebSchedules, 
+    cobwebAudits, 
+    saveCobwebAudit 
+  };
 }

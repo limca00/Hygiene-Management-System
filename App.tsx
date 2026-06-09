@@ -39,7 +39,20 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
    MAIN APP
    ============================================================ */
 export default function App() {
-  const { records, fprs, alerts, saveAudit, addFpr, updateFpr, removeAlert, isLoading, apiConnected } = useStore();
+  const { 
+    records, 
+    fprs, 
+    alerts, 
+    saveAudit, 
+    addFpr, 
+    updateFpr, 
+    removeAlert, 
+    isLoading, 
+    apiConnected, 
+    cobwebSchedules, 
+    cobwebAudits, 
+    saveCobwebAudit 
+  } = useStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -105,6 +118,15 @@ export default function App() {
     removeAlert(id);
   }, [removeAlert]);
 
+  const handleSaveCobwebAudit = useCallback(async (auditData: any) => {
+    try {
+      await saveCobwebAudit(auditData);
+      showToast('✅ Cobweb audit saved successfully', 'success');
+    } catch (err) {
+      showToast('❌ Failed to save cobweb audit', 'error');
+    }
+  }, [saveCobwebAudit, showToast]);
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       <div className="min-h-screen bg-[#0d1b2a] text-[#e2e8f0]" style={{ overflowX: 'hidden' }}>
@@ -129,6 +151,9 @@ export default function App() {
               onAddFpr={handleAddFpr}
               onRemoveAlert={handleRemoveAlert}
               apiConnected={apiConnected}
+              cobwebSchedules={cobwebSchedules}
+              cobwebAudits={cobwebAudits}
+              onSaveCobwebAudit={handleSaveCobwebAudit}
             />
 
         {/* Floating FAB — Data Entry */}
